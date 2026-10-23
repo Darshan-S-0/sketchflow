@@ -120,11 +120,24 @@ Copy `.env.example` to `backend/.env`:
 # Windows PowerShell
 Copy-Item .env.example backend\.env
 ```
-Open `backend/.env` and replace `your_gemini_api_key_here` with your actual Gemini API key:
+Open `backend/.env` and configure your API key and settings:
 ```ini
+# Google Gemini API Key
 GEMINI_API_KEY=AIzaSy...your_actual_key...
 GEMINI_MODEL=gemini-3.5-flash
+
+# Optional: Add any custom frontend domain (Render *.onrender.com and localhost are allowed by default)
+ALLOWED_ORIGINS=https://sketchflow-6d65.onrender.com,http://localhost:5173,http://127.0.0.1:5173
 ```
+
+#### Frontend Configuration (`VITE_API_URL`)
+The frontend automatically resolves the backend endpoint:
+- **In Local Development** (`localhost`/`127.0.0.1`): Defaults to `http://127.0.0.1:8000`.
+- **In Production on Render**: Automatically falls back to `https://sketchflow-6d65.onrender.com`.
+- **Custom Override**: To point to a different backend, copy `frontend/.env.example` to `frontend/.env` and set:
+  ```ini
+  VITE_API_URL=https://your-custom-backend.onrender.com
+  ```
 
 > **Security Note**: Never commit `backend/.env` or expose your API key in version control. The backend strictly handles model calls and hides credentials from client requests.
 
@@ -214,7 +227,8 @@ cmd /c npm run build
   "api_key_configured": true,
   "primary_model": "gemini-3.5-flash",
   "available_models": ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3-flash-preview"],
-  "cors_origins": ["http://localhost:5173", "http://127.0.0.1:5173"]
+  "cors_origins": ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000", "http://127.0.0.1:3000", "https://sketchflow-6d65.onrender.com"],
+  "cors_regex": "^https://[a-zA-Z0-9_-]+\\.onrender\\.com$"
 }
 ```
 

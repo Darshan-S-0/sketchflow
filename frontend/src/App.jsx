@@ -7,8 +7,40 @@ import {
 } from "lucide-react";
 import "./App.css";
 
-const BACKEND_URL = "http://127.0.0.1:8000";
-const API_URL = `${BACKEND_URL}/analyze`;
+// Resolve the backend URL based on VITE_API_URL, production mode, or hostname
+function resolveBackendConfig() {
+  const envUrl = (import.meta.env.VITE_API_URL || "").trim();
+  let base = envUrl;
+
+  if (!base) {
+    const isLocalhost =
+      typeof window !== "undefined" &&
+      (window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1" ||
+        window.location.hostname === "::1");
+
+    // In production or when hosted on a remote domain (e.g. Render), default to the deployed backend.
+    // In local development on localhost/127.0.0.1, default to the local FastAPI dev server.
+    base = import.meta.env.PROD || !isLocalhost
+      ? "https://sketchflow-6d65.onrender.com"
+      : "http://127.0.0.1:8000";
+  }
+
+  // Strip trailing slashes
+  base = base.replace(/\/+$/, "");
+
+  // If the user supplied a full endpoint ending in /analyze, extract base URL
+  if (base.endsWith("/analyze")) {
+    base = base.slice(0, -"/analyze".length).replace(/\/+$/, "");
+  }
+
+  return {
+    backendUrl: base,
+    apiUrl: `${base}/analyze`,
+  };
+}
+
+const { backendUrl: BACKEND_URL, apiUrl: API_URL } = resolveBackendConfig();
 
 export default function App() {
   const canvasRef = useRef(null);
@@ -458,9 +490,11 @@ export default function App() {
       if (data.model) setActiveModel(data.model);
       showToast("✨ Interface built successfully!");
     } catch (err) {
-      setError(
-        `${err.message} (Backend endpoint: ${API_URL})`
-      );
+      const isFailedFetch = err.message && err.message.toLowerCase().includes("failed to fetch");
+      const friendlyDetail = isFailedFetch
+        ? "Could not reach the backend server. If using Render, the backend may be cold-starting (takes ~30-50s) or check your CORS configuration."
+        : err.message;
+      setError(`${friendlyDetail} (Endpoint: ${API_URL})`);
     } finally {
       setLoading(false);
       setLoadingStep("");

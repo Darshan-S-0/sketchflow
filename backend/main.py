@@ -18,14 +18,32 @@ load_dotenv()  # fallback to parent or current working directory
 
 app = FastAPI(title="SketchFlow API", description="Converts hand-drawn UI sketches into structured React UI JSON")
 
+# Allowed CORS origins
+env_origins = [
+    origin.strip().rstrip("/")
+    for origin in os.getenv("ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
+# If FRONTEND_URL is provided, include it
+frontend_url = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
+if frontend_url and frontend_url not in env_origins:
+    env_origins.append(frontend_url)
+
+DEFAULT_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://sketchflow-6d65.onrender.com",
+]
+
+ALLOWED_ORIGINS = list(dict.fromkeys(DEFAULT_ORIGINS + env_origins))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"^https://[a-zA-Z0-9_-]+\.onrender\.com$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -762,7 +780,8 @@ def health():
         "api_key_configured": bool(API_KEY),
         "primary_model": PRIMARY_MODEL,
         "available_models": CANDIDATE_MODELS,
-        "cors_origins": ["http://localhost:5173", "http://127.0.0.1:5173"],
+        "cors_origins": ALLOWED_ORIGINS,
+        "cors_regex": r"^https://[a-zA-Z0-9_-]+\.onrender\.com$",
     }
 
 

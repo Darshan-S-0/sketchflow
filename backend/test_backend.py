@@ -1,4 +1,5 @@
 import sys
+import re
 import base64
 from pathlib import Path
 
@@ -13,15 +14,21 @@ from main import (
     parse_and_validate_image,
     analyze,
     SketchRequest,
+    ALLOWED_ORIGINS,
 )
 
 def run_tests():
-    print("=== TEST 1: Health Check ===")
+    print("=== TEST 1: Health Check & CORS Configuration ===")
     h = health()
     print("Health result:", h)
     assert h["status"] == "ok"
     assert h["api_key_configured"] is True
-    print("PASS: Health Check\n")
+    assert "https://sketchflow-6d65.onrender.com" in h["cors_origins"]
+    assert "cors_regex" in h
+    assert bool(re.match(h["cors_regex"], "https://sketchflow.onrender.com"))
+    assert bool(re.match(h["cors_regex"], "https://sketchflow-6d65.onrender.com"))
+    assert not bool(re.match(h["cors_regex"], "https://malicious-site.com"))
+    print("PASS: Health Check & CORS Configuration\n")
 
     print("=== TEST 2: JSON Repair & Markdown Stripping ===")
     markdown_json = '''```json
