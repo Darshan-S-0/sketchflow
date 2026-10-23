@@ -52,12 +52,12 @@ app.add_middleware(
 API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 PRIMARY_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash").strip()
 
-# Reliable Gemini models with vision support
+# Reliable Gemini models with vision support (confirmed working)
 FALLBACK_MODELS = [
     PRIMARY_MODEL,
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
-    "gemini-3-flash-preview",
+    "gemini-3.1-flash-lite",
 ]
 CANDIDATE_MODELS = list(dict.fromkeys([m for m in FALLBACK_MODELS if m]))
 
